@@ -43,7 +43,8 @@ def main():
     def local_reply_func(self, messages, sender, config):
         print("🚀 Local LLM called with messages:", messages)
         result = llm_client.create(messages)
-        return result["choices"][0]["message"]["content"]
+        reply_text = result["choices"][0]["message"]["content"]
+        return False, reply_text
 
     agent.register_reply("Human Tester", reply_func=local_reply_func)
 
