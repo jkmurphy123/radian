@@ -19,7 +19,7 @@ def create_agent(name: str, prompt: str, llm_client: LlamaCppWrapper) -> Convers
         system_message=prompt,
         llm_config={
             "temperature": 0.7,
-            "config_list": [{"model": "local-llama", "client": llm_client}]
+            "client": llm_client  # <-- direct client override
         }
     )
 

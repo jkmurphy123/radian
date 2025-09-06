@@ -17,6 +17,8 @@ class LlamaCppWrapper:
         - messages: list of dicts like [{"role": "system", "content": "..."}, ...]
         - kwargs: extra options like temperature
         """
+        print("🚀 llama_cpp client invoked with:", messages)
+        
         # Build prompt from messages
         prompt = self._format_messages(messages)
 
