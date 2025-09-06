@@ -44,7 +44,12 @@ def main():
         print("🚀 Local LLM called with messages:", messages)
         result = llm_client.create(messages)
         reply_text = result["choices"][0]["message"]["content"]
-        return False, reply_text
+
+        # Must be a list of role/content dicts
+        reply_message = [{"role": "assistant", "content": reply_text}]
+
+        return False, reply_message
+
 
     agent.register_reply("Human Tester", reply_func=local_reply_func)
 
