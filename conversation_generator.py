@@ -78,9 +78,13 @@ def main():
     config = load_config("config.json")
     ensure_logs_dir()
 
-    llm_client = LlamaCppWrapper(model_path="models/mistral-7b-instruct.Q4_K_M.gguf")
+    model_path = config.get("model_path")
+    if not model_path:
+        raise ValueError("❌ No 'model_path' found in config.json")
 
-    num_chats = 5  # or make this configurable
+    llm_client = LlamaCppWrapper(model_path=model_path)
+
+    num_chats = 5  # could also make this a config value
     for i in range(1, num_chats + 1):
         generate_conversation(config, llm_client, chat_id=i)
 

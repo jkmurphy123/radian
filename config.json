@@ -1,4 +1,5 @@
 {
+    "model_path": "/home/ubuntu/models/qwen2-7b-instruct-q5_k_m.gguf",
     "chat_delay_seconds": 20,
     "min_turns": 5,
     "max_turns": 8,
