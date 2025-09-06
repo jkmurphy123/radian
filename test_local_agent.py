@@ -40,7 +40,7 @@ def main():
     )
 
     # Register reply specifically for when sender is "Human Tester"
-    def local_reply_func(messages, sender, config):
+    def local_reply_func(self, messages, sender, config):
         print("🚀 Local LLM called with messages:", messages)
         result = llm_client.create(messages)
         return result["choices"][0]["message"]["content"]
