@@ -1,0 +1,11 @@
+# Core LLM + multi-agent
+llama-cpp-python>=0.2.60
+autogen>=0.2.0
+
+# UI
+PyQt5>=5.15.9
+
+# Utilities
+numpy>=1.24.0
+pyyaml>=6.0
+orjson>=3.9.0
