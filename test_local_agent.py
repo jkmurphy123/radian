@@ -58,9 +58,9 @@ def main():
 
     # Run a simple conversation
     history = [{"role": "user", "content": "Why do humans eat pizza?"}]
-    reply = agent.generate_reply(messages=history)
-
+    reply = agent.generate_reply(messages=history, sender="tester")
     print("\n🤖 Agent reply:\n", reply)
+
 
 
 if __name__ == "__main__":
