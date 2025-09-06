@@ -14,14 +14,18 @@ def ensure_logs_dir():
     os.makedirs(LOGS_DIR, exist_ok=True)
 
 def create_agent(name: str, prompt: str, llm_client: LlamaCppWrapper) -> ConversableAgent:
-    return ConversableAgent(
+    agent = ConversableAgent(
         name=name,
         system_message=prompt,
-        llm_config={
-            "temperature": 0.7,
-            "client": llm_client  # <-- direct client override
-        }
+        llm_config=None
     )
+
+    def custom_reply_func(messages, sender, config):
+        response = llm_client.create(messages)
+        return response["choices"][0]["message"]["content"]
+
+    agent.register_reply(reply_func=custom_reply_func)
+    return agent
 
 def generate_conversation(config: dict, llm_client: LlamaCppWrapper, chat_id: int):
     """Generate one conversation and save as JSON log."""
