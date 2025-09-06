@@ -13,14 +13,16 @@ LOGS_DIR = "logs"
 def ensure_logs_dir():
     os.makedirs(LOGS_DIR, exist_ok=True)
 
-def create_agent(name: str, prompt: str, llm_client: LlamaCppWrapper) -> ConversableAgent:
-    """Create an AutoGen agent with a fixed persona."""
+def create_agent(name: str, prompt: str, llm_client) -> ConversableAgent:
+    """Create an AutoGen agent with a fixed persona using local llama.cpp."""
     return ConversableAgent(
         name=name,
         system_message=prompt,
         llm_config={
             "temperature": 0.7,
-            "config_list": [{"model": "llama.cpp", "client": llm_client}],
+            "functions": None,  # no OpenAI functions
+            "model": "local-llama",
+            "client": lambda prompt, **kwargs: {"choices": [{"message": {"content": llm_client.complete(prompt)}}]}
         }
     )
 

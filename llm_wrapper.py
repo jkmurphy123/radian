@@ -10,7 +10,6 @@ class LlamaCppWrapper:
         self.max_tokens = max_tokens
 
     def complete(self, prompt: str) -> str:
-        """Generate a completion for a given prompt."""
         response = self.llm(
             prompt,
             max_tokens=self.max_tokens,
