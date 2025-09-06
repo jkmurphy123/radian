@@ -3,7 +3,7 @@ llama-cpp-python>=0.2.60
 autogen>=0.2.0
 
 # UI
-PyQt5>=5.15.9
+PyQt5
 
 # Utilities
 numpy<2
