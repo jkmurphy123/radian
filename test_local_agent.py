@@ -54,7 +54,7 @@ def main():
         result = llm_client.create(messages)
         return result["choices"][0]["message"]["content"]
 
-    agent.register_reply(reply_func=local_reply_func)
+    agent.register_reply("default", reply_func=local_reply_func)
 
     # Run a simple conversation
     history = [{"role": "user", "content": "Why do humans eat pizza?"}]
