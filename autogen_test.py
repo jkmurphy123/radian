@@ -17,8 +17,12 @@ def main():
     # Send a message
     user.send("Hello, can you hear me?", assistant)
 
-    # Print assistant’s chat history
-    print("🤖 Assistant messages:", assistant.chat_messages)
+    # Now look up what the assistant logged in reply to *this* user
+    if user in assistant.chat_messages:
+        for msg in assistant.chat_messages[user]:
+            print("🤖 Assistant reply:", msg)
+    else:
+        print("No assistant reply found.")
 
 if __name__ == "__main__":
     main()
