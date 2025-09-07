@@ -2,59 +2,89 @@ import os
 import json
 import random
 from datetime import datetime
+from autogen import AssistantAgent, UserProxyAgent
+from llama_cpp import Llama
 from config_loader import load_config
-from llm_wrapper import LlamaCppWrapper
-from autogen import ConversableAgent
 
 LOGS_DIR = "logs"
+
+
+class LlamaAssistant(AssistantAgent):
+    """AssistantAgent subclass backed by llama.cpp"""
+
+    def __init__(self, name: str, persona_prompt: str, model_path: str):
+        super().__init__(name)
+        self.llm = Llama(model_path=model_path, n_ctx=2048)
+        self.persona_prompt = persona_prompt
+
+    def generate_reply(self, sender, message, **kwargs):
+        """Override to call local llama.cpp"""
+        print(f"🚀 {self.name} (LLM) called with message from {sender.name}: {message['content']}")
+
+        response = self.llm.create_chat_completion(
+            messages=[
+                {"role": "system", "content": self.persona_prompt},
+                {"role": message["role"], "content": message["content"]},
+            ],
+            max_tokens=kwargs.get("max_tokens", 256),
+            temperature=kwargs.get("temperature", 0.7),
+        )
+
+        reply_text = response["choices"][0]["message"]["content"].strip()
+
+        return {
+            "role": "assistant",
+            "name": self.name,
+            "content": reply_text,
+        }
 
 
 def ensure_logs_dir():
     os.makedirs(LOGS_DIR, exist_ok=True)
 
 
-def create_agent(persona: dict, llm_client: LlamaCppWrapper) -> ConversableAgent:
-    """Create an AutoGen agent tied to the local LLM with a fixed persona."""
-
-    agent = ConversableAgent(
-        name=persona["name"],
-        system_message=persona["prompt"],
-        llm_config=None  # avoid OpenAI schema validation
-    )
-
-    def local_reply_func(messages, sender, config):
-        result = llm_client.create(messages)
-        return result["choices"][0]["message"]["content"]
-
-    agent.register_reply("default", reply_func=local_reply_func)
-    return agent
-
-
-def generate_conversation(config: dict, llm_client: LlamaCppWrapper, chat_id: int):
+def generate_conversation(config: dict, chat_id: int):
     """Generate one conversation and save as JSON log."""
+
+    # Pick 2 personalities
     personalities = random.sample(config["personalities"], 2)
     turns = random.randint(config["min_turns"], config["max_turns"])
 
-    # Create agents
-    agent_a = create_agent(personalities[0], llm_client)
-    agent_b = create_agent(personalities[1], llm_client)
+    # Create assistants
+    agent_a = LlamaAssistant(
+        name=personalities[0]["name"],
+        persona_prompt=personalities[0]["prompt"],
+        model_path=config["model_path"],
+    )
+
+    agent_b = LlamaAssistant(
+        name=personalities[1]["name"],
+        persona_prompt=personalities[1]["prompt"],
+        model_path=config["model_path"],
+    )
+
+    # Dummy user (always the sender)
+    user = UserProxyAgent("user", code_execution_config={"use_docker": False})
 
     messages = []
-    current_agent, next_agent = agent_a, agent_b
 
-    # First user prompt to kick off conversation
-    history = [{"role": "user", "content": f"Start a conversation with {next_agent.name}."}]
-    response = current_agent.generate_reply(messages=history, sender=next_agent)
-    messages.append({"speaker": current_agent.name, "text": response})
+    # Kick off conversation
+    last_message = {"role": "user", "content": f"Let's start chatting, {agent_a.name}!", "name": "user"}
+    current_speaker, next_speaker = agent_a, agent_b
 
-    # Alternate turns
-    for _ in range(turns - 1):
-        history = [{"role": "assistant", "content": messages[-1]["text"]}]
-        response = next_agent.generate_reply(messages=history, sender=current_agent)
-        messages.append({"speaker": next_agent.name, "text": response})
-        current_agent, next_agent = next_agent, current_agent
+    for i in range(turns):
+        reply = current_speaker.generate_reply(sender=user, message=last_message)
+        messages.append({"speaker": current_speaker.name, "text": reply["content"]})
 
-    # Prepare log structure
+        # Prepare next input message
+        last_message = {
+            "role": "assistant",
+            "content": reply["content"],
+            "name": current_speaker.name,
+        }
+        current_speaker, next_speaker = next_speaker, current_speaker
+
+    # Build log
     log_data = {
         "timestamp": datetime.utcnow().isoformat(),
         "participants": [
@@ -67,7 +97,7 @@ def generate_conversation(config: dict, llm_client: LlamaCppWrapper, chat_id: in
                 "name": personalities[1]["name"],
                 "image": personalities[1]["image_file_name"],
                 "color": personalities[1]["color"],
-            }
+            },
         ],
         "messages": messages,
     }
@@ -84,15 +114,9 @@ def main():
     config = load_config("config.json")
     ensure_logs_dir()
 
-    model_path = config.get("model_path")
-    if not model_path:
-        raise ValueError("❌ No 'model_path' found in config.json")
-
-    llm_client = LlamaCppWrapper(model_path=model_path)
-
-    num_chats = config.get("num_chats", 5)  # default 5 if not in config
+    num_chats = config.get("num_chats", 5)
     for i in range(1, num_chats + 1):
-        generate_conversation(config, llm_client, chat_id=i)
+        generate_conversation(config, chat_id=i)
 
 
 if __name__ == "__main__":
