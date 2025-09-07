@@ -57,8 +57,7 @@ def main():
 
     #agent.register_reply("Human Tester", reply_func=local_reply_func)
     agent.register_reply("default", reply_func=local_reply_func)
-    print("🔍 Registered reply functions:", agent._reply_funcs)
-
+    print("🔍 Registered reply functions:", agent._reply_func_list)
 
     # Run a test exchange
     history = [
