@@ -46,12 +46,19 @@ def main():
         reply_text = result["choices"][0]["message"]["content"]
 
         # Must be a list of role/content dicts
-        reply_message = [{"role": "assistant", "content": reply_text}]
+        #reply_message = [{"role": "assistant", "content": reply_text}]
+        #print("🚀 Local LLM responded with messages:", reply_message)
+        reply_text = result["choices"][0]["message"]["content"]
+        print("⚡ Returning reply:", reply_text)        
 
-        return False, reply_message
+        #return False, reply_message
+        return False, reply_text
 
 
-    agent.register_reply("Human Tester", reply_func=local_reply_func)
+    #agent.register_reply("Human Tester", reply_func=local_reply_func)
+    agent.register_reply("default", reply_func=local_reply_func)
+    print("🔍 Registered reply functions:", agent._reply_funcs)
+
 
     # Run a test exchange
     history = [

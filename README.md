@@ -14,7 +14,7 @@ project/
 cd projects
 python3 -m venv llm_env
 source llm_env/bin/activate  
-cd radion
+cd radian
 
 # 2) Install deps
 pip install -r requirements.txt
