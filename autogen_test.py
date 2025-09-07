@@ -1,28 +1,27 @@
 from autogen import AssistantAgent, UserProxyAgent
 
 def main():
-    # Create a user agent (disable Docker)
     user = UserProxyAgent("user", code_execution_config={"use_docker": False})
-
-    # Create an assistant agent
     assistant = AssistantAgent("assistant")
 
-    # Proper reply handler must return (triggered, message_dict)
+    # Register dummy reply
     assistant.register_reply(
         "message",
         lambda sender, message, *args, **kwargs: (
-            True,  # means this handler is triggered
-            {
-                "role": "assistant",
-                "content": f"⚡ Dummy reply received your message: {message['content']}"
-            }
+            True,
+            {"role": "assistant", "content": f"⚡ Dummy reply received: {message['content']}"}
         )
     )
 
-    # User sends a message to assistant
-    reply = user.send("Hello, can you hear me?", assistant)
+    # User sends a message (this won’t return anything)
+    user.send("Hello, can you hear me?", assistant)
 
-    print("🤖 Agent reply:", reply)
+    # Fetch last message in assistant’s history
+    if assistant._oai_messages:  # internal conversation log
+        last_msg = assistant._oai_messages[-1]
+        print("🤖 Agent reply:", last_msg)
+    else:
+        print("No reply recorded.")
 
 if __name__ == "__main__":
     main()
