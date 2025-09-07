@@ -1,9 +1,13 @@
-from autogen import AssistantAgent
+from autogen import AssistantAgent, UserProxyAgent
 
 def main():
+    # Create a user agent (no Docker)
+    user = UserProxyAgent("user", code_execution_config={"use_docker": False})
+
+    # Create an assistant agent
     assistant = AssistantAgent("assistant")
 
-    # Override reply generation for testing
+    # Register dummy reply for assistant
     assistant.register_reply(
         "message",
         lambda sender, message, *args, **kwargs: {
@@ -12,9 +16,8 @@ def main():
         }
     )
 
-    # Directly generate a reply
-    test_message = {"role": "user", "content": "Hello, can you hear me?"}
-    reply = assistant.generate_reply(sender="user", message=test_message)
+    # User sends a message to assistant
+    reply = user.send("Hello, can you hear me?", assistant)
 
     print("🤖 Agent reply:", reply)
 
