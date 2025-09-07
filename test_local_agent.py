@@ -62,7 +62,6 @@ def main():
         print("⚡ Custom reply function triggered!")
         return "This is a test reply from local_reply_func."
 
-
     agent.register_reply("Human Tester", reply_func=local_reply_func)
     #agent.register_reply("default", reply_func=local_reply_func)
     print("🔍 Registered reply functions:", agent._reply_func_list)
