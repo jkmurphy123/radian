@@ -1,82 +1,53 @@
+from autogen import AssistantAgent, UserProxyAgent
 from llama_cpp import Llama
-from autogen import ConversableAgent
 
 
-class LlamaCppWrapper:
-    def __init__(self, model_path: str, max_tokens: int = 256):
+class LlamaAssistant(AssistantAgent):
+    """AssistantAgent subclass backed by llama.cpp"""
+
+    def __init__(self, name: str, model_path: str):
+        super().__init__(name)
         self.llm = Llama(model_path=model_path, n_ctx=2048)
-        self.max_tokens = max_tokens
 
-    def create(self, messages, **kwargs):
+    def generate_reply(self, sender, message, **kwargs):
+        """Override to call local llama.cpp instead of OpenAI"""
+        print(f"🚀 Local LLM called with message from {sender.name}: {message['content']}")
+
         response = self.llm.create_chat_completion(
-            messages=messages,
-            max_tokens=kwargs.get("max_tokens", self.max_tokens),
-            temperature=kwargs.get("temperature", 0.7),
+            messages=[
+                {"role": "system", "content": "You are a frustrated alien overlord who can't understand humans."},
+                {"role": message["role"], "content": message["content"]}
+            ],
+            max_tokens=256,
+            temperature=0.7,
         )
-        text = response["choices"][0]["message"]["content"].strip()
+
+        reply_text = response["choices"][0]["message"]["content"].strip()
+
         return {
-            "choices": [
-                {"message": {"role": "assistant", "content": text}}
-            ]
+            "role": "assistant",
+            "name": self.name,
+            "content": reply_text,
         }
 
 
 def main():
     model_path = "/home/ubuntu/models/qwen2-7b-instruct-q5_k_m.gguf"
-    llm_client = LlamaCppWrapper(model_path)
 
-    # Agent powered by llama.cpp
-    agent = ConversableAgent(
-        name="Alien Overlord",
-        system_message="You are a frustrated alien overlord who can't understand humans.",
-        llm_config=None,
-        human_input_mode="NEVER",   # disables asking user
-        code_execution_config=False # disables code execution
-    )
-    agent.auto_reply = False  # <--- force-disable auto reply
+    user = UserProxyAgent("user", code_execution_config={"use_docker": False})
+    assistant = LlamaAssistant("assistant", model_path=model_path)
 
+    # User sends message
+    user.send("Why do humans eat pizza?", assistant)
 
-    # Dummy user agent
-    user = ConversableAgent(
-        name="Human Tester",
-        system_message="A curious human.",
-        llm_config=None
+    # Assistant replies
+    reply = assistant.generate_reply(
+        sender=user,
+        message={"role": "user", "content": "Why do humans eat pizza?", "name": "user"},
     )
 
-    # Register reply specifically for when sender is "Human Tester"
-    # def local_reply_func(self, messages, sender, config):
-    #     print("🚀 Local LLM called with messages:", messages)
-    #     result = llm_client.create(messages)
-    #     reply_text = result["choices"][0]["message"]["content"]
+    print("🤖 Assistant reply:", reply)
 
-    #     # Must be a list of role/content dicts
-    #     #reply_message = [{"role": "assistant", "content": reply_text}]
-    #     #print("🚀 Local LLM responded with messages:", reply_message)
-    #     reply_text = result["choices"][0]["message"]["content"]
-    #     print("⚡ Returning reply:", reply_text)        
-
-    #     #return False, reply_message
-    #     return False, reply_text
-
-    def local_reply_func(self, messages, sender, config):
-        print("⚡ Custom reply function triggered!")
-        reply = {"role": "assistant", "content": "This is a test reply from local_reply_func."}
-        return False, reply
-
-
-
-    agent.register_reply("Human Tester", reply_func=local_reply_func)
-    #agent.register_reply("default", reply_func=local_reply_func)
-    print("🔍 Registered reply functions:", agent._reply_func_list)
-
-    # Run a test exchange
-    history = [
-        {"role": "system", "content": "You are a frustrated alien overlord."},
-        {"role": "user", "content": "Why do humans eat pizza?"}
-    ]
-
-    reply = agent.generate_reply(messages=history, sender=user)
-    print("🤖 Agent reply:", reply)
 
 if __name__ == "__main__":
     main()
