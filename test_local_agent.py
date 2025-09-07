@@ -60,7 +60,8 @@ def main():
 
     def local_reply_func(self, messages, sender, config):
         print("⚡ Custom reply function triggered!")
-        return "This is a test reply from local_reply_func."
+        return False, "This is a test reply from local_reply_func."
+
 
     agent.register_reply("Human Tester", reply_func=local_reply_func)
     #agent.register_reply("default", reply_func=local_reply_func)
