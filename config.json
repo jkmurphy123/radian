@@ -3,6 +3,7 @@
     "chat_delay_seconds": 20,
     "min_turns": 5,
     "max_turns": 8,
+    "num_chats": 5,
     "personalities": [
         {
             "name": "Alien Overlord",
