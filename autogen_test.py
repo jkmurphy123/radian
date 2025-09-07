@@ -1,6 +1,7 @@
-from autogen import AssistantAgent, UserProxyAgent
+from autogen import AssistantAgent, UserProxyAgent, Conversation
 
 def main():
+    # Create agents
     user = UserProxyAgent("user", code_execution_config={"use_docker": False})
     assistant = AssistantAgent("assistant")
 
@@ -13,15 +14,15 @@ def main():
         )
     )
 
-    # User sends a message (this won’t return anything)
-    user.send("Hello, can you hear me?", assistant)
+    # Create a conversation manager
+    convo = Conversation([user, assistant])
 
-    # Fetch last message in assistant’s history
-    if assistant._oai_messages:  # internal conversation log
-        last_msg = assistant._oai_messages[-1]
-        print("🤖 Agent reply:", last_msg)
-    else:
-        print("No reply recorded.")
+    # Run one turn: user → assistant
+    convo.post(user, "Hello, can you hear me?")
+
+    # Print conversation log
+    for turn in convo.messages:
+        print(f"{turn['role']}: {turn['content']}")
 
 if __name__ == "__main__":
     main()
