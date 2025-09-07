@@ -1,4 +1,4 @@
-from autogen import AssistantAgent, UserProxyAgent, Conversation
+from autogen import AssistantAgent, UserProxyAgent
 
 def main():
     # Create agents
@@ -14,15 +14,11 @@ def main():
         )
     )
 
-    # Create a conversation manager
-    convo = Conversation([user, assistant])
+    # Send a message
+    user.send("Hello, can you hear me?", assistant)
 
-    # Run one turn: user → assistant
-    convo.post(user, "Hello, can you hear me?")
-
-    # Print conversation log
-    for turn in convo.messages:
-        print(f"{turn['role']}: {turn['content']}")
+    # Print assistant’s chat history
+    print("🤖 Assistant messages:", assistant.chat_messages)
 
 if __name__ == "__main__":
     main()
