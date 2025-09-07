@@ -29,8 +29,12 @@ def main():
     agent = ConversableAgent(
         name="Alien Overlord",
         system_message="You are a frustrated alien overlord who can't understand humans.",
-        llm_config=None
+        llm_config=None,
+        human_input_mode="NEVER",   # disables asking user
+        code_execution_config=False # disables code execution
     )
+    agent.auto_reply = False  # <--- force-disable auto reply
+
 
     # Dummy user agent
     user = ConversableAgent(
@@ -56,7 +60,9 @@ def main():
 
     def local_reply_func(self, messages, sender, config):
         print("⚡ Custom reply function triggered!")
-        return False, "This is a test reply."
+        reply = "This is a test reply."
+        return False, reply
+
 
     agent.register_reply("Human Tester", reply_func=local_reply_func)
     #agent.register_reply("default", reply_func=local_reply_func)
