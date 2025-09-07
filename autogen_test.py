@@ -1,12 +1,13 @@
 from autogen import AssistantAgent, UserProxyAgent
 
 def main():
-    # Create an assistant agent (pretend LLM)
+    # Create an assistant agent
     assistant = AssistantAgent("assistant")
 
-    # Override the reply function so we don't need an API key or model
+    # Register a dummy reply handler for normal "message" events
     assistant.register_reply(
-        lambda *args, **kwargs: ("⚡ Dummy reply function triggered!", "This is a test response.")
+        "message",   # <-- required first argument
+        lambda sender, message, *args, **kwargs: ("⚡ Dummy reply function triggered!", "This is a test response.")
     )
 
     # Create a simple user agent
