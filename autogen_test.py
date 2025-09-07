@@ -14,15 +14,13 @@ def main():
         )
     )
 
-    # Send a message
+    # User sends a message
     user.send("Hello, can you hear me?", assistant)
 
-    # Now look up what the assistant logged in reply to *this* user
-    if user in assistant.chat_messages:
-        for msg in assistant.chat_messages[user]:
-            print("🤖 Assistant reply:", msg)
-    else:
-        print("No assistant reply found.")
+    # Force assistant to generate reply
+    reply = assistant.generate_reply(sender=user, message={"role": "user", "content": "Hello, can you hear me?"})
+
+    print("🤖 Assistant reply:", reply)
 
 if __name__ == "__main__":
     main()
