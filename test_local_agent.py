@@ -40,23 +40,26 @@ def main():
     )
 
     # Register reply specifically for when sender is "Human Tester"
+    # def local_reply_func(self, messages, sender, config):
+    #     print("🚀 Local LLM called with messages:", messages)
+    #     result = llm_client.create(messages)
+    #     reply_text = result["choices"][0]["message"]["content"]
+
+    #     # Must be a list of role/content dicts
+    #     #reply_message = [{"role": "assistant", "content": reply_text}]
+    #     #print("🚀 Local LLM responded with messages:", reply_message)
+    #     reply_text = result["choices"][0]["message"]["content"]
+    #     print("⚡ Returning reply:", reply_text)        
+
+    #     #return False, reply_message
+    #     return False, reply_text
+
     def local_reply_func(self, messages, sender, config):
-        print("🚀 Local LLM called with messages:", messages)
-        result = llm_client.create(messages)
-        reply_text = result["choices"][0]["message"]["content"]
+        print("⚡ Custom reply function triggered!")
+        return False, "This is a test reply."
 
-        # Must be a list of role/content dicts
-        #reply_message = [{"role": "assistant", "content": reply_text}]
-        #print("🚀 Local LLM responded with messages:", reply_message)
-        reply_text = result["choices"][0]["message"]["content"]
-        print("⚡ Returning reply:", reply_text)        
-
-        #return False, reply_message
-        return False, reply_text
-
-
-    #agent.register_reply("Human Tester", reply_func=local_reply_func)
-    agent.register_reply("default", reply_func=local_reply_func)
+    agent.register_reply("Human Tester", reply_func=local_reply_func)
+    #agent.register_reply("default", reply_func=local_reply_func)
     print("🔍 Registered reply functions:", agent._reply_func_list)
 
     # Run a test exchange
