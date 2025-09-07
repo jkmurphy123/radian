@@ -6,12 +6,15 @@ def main():
 
     # Register a dummy reply handler for normal "message" events
     assistant.register_reply(
-        "message",   # <-- required first argument
+        "message",
         lambda sender, message, *args, **kwargs: ("⚡ Dummy reply function triggered!", "This is a test response.")
     )
 
-    # Create a simple user agent
-    user = UserProxyAgent("user")
+    # Create a user agent WITHOUT Docker code execution
+    user = UserProxyAgent(
+        "user",
+        code_execution_config={"use_docker": False}  # <-- important!
+    )
 
     # Send a test message
     reply = user.send("Hello, can you hear me?", assistant)
