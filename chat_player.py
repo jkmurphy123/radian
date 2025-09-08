@@ -35,6 +35,11 @@ def split_message_into_chunks(text, max_len=200):
 
     return chunks
 
+class TypingIndicator(QLabel):
+    def __init__(self, speaker_name):
+        super().__init__(f"{speaker_name} is typing...")
+        self.setStyleSheet("font-style: italic; color: gray; padding: 5px;")
+
 class ChatBubble(QWidget):
     def __init__(self, speaker_name, text, avatar_path, color):
         super().__init__()
@@ -99,6 +104,49 @@ class ChatWindow(QWidget):
         self.timer.timeout.connect(self.show_next_message)
         self.start_next_conversation()
 
+    def _show_chunks_with_delay(self, speaker, participant, chunks, idx, first_in_turn=True):
+        """Show typing indicator + balloon for each chunk with natural delays."""
+        if idx < len(chunks):
+            # Show typing indicator
+            indicator = TypingIndicator(speaker)
+            self.chat_area.addWidget(indicator)
+
+            # Decide typing delay
+            if first_in_turn:
+                typing_delay = 3000  # 3 seconds for first message
+            else:
+                length = len(chunks[idx])
+                if length < 80:
+                    typing_delay = 5000   # short message ~5s
+                elif length < 200:
+                    typing_delay = 8000   # medium ~8s
+                else:
+                    typing_delay = 12000  # long ~12s
+
+            def show_balloon():
+                # Remove typing indicator
+                self.chat_area.removeWidget(indicator)
+                indicator.deleteLater()
+
+                # Add actual balloon
+                bubble = ChatBubble(
+                    speaker,
+                    chunks[idx],
+                    participant["image"],
+                    participant["color"]
+                )
+                self.chat_area.addWidget(bubble)
+
+                # Schedule next chunk (if any)
+                QTimer.singleShot(
+                    typing_delay,
+                    lambda: self._show_chunks_with_delay(speaker, participant, chunks, idx + 1, first_in_turn=False)
+                )
+
+            # Show balloon after typing delay
+            QTimer.singleShot(typing_delay, show_balloon)
+
+
     def keyPressEvent(self, event):
         """Stop on ESC key."""
         if event.key() == Qt.Key_Escape:
@@ -128,23 +176,18 @@ class ChatWindow(QWidget):
             msg = self.current_messages[self.message_index]
             p = self.participants[msg["speaker"]]
 
-            # Split into smaller chunks if needed
+            # Split into chunks
             chunks = split_message_into_chunks(msg["text"], max_len=200)
 
-            for chunk in chunks:
-                bubble = ChatBubble(
-                    msg["speaker"],
-                    chunk,
-                    p["image"],
-                    p["color"]
-                )
-                self.chat_area.addWidget(bubble)
+            # Start chunk display with special first-turn delay
+            self._show_chunks_with_delay(msg["speaker"], p, chunks, 0, first_in_turn=True)
 
             self.message_index += 1
         else:
-            # Conversation ended, start next after delay
+            # End of conversation
             self.timer.stop()
             QTimer.singleShot(2000, self.start_next_conversation)
+
 
 def load_config(path):
     with open(path, "r", encoding="utf-8") as f:
