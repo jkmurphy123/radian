@@ -16,6 +16,24 @@ from PyQt5.QtWidgets import (
 CONFIG_FILE = "config.json"
 LOGS_DIR = "logs"
 
+def split_message_into_chunks(text, max_len=200):
+    """Split long text into smaller chunks at sentence boundaries."""
+    # First, split into sentences
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    chunks, current = [], ""
+
+    for sentence in sentences:
+        if len(current) + len(sentence) + 1 <= max_len:
+            current += (" " if current else "") + sentence
+        else:
+            if current:
+                chunks.append(current.strip())
+            current = sentence
+
+    if current:
+        chunks.append(current.strip())
+
+    return chunks
 
 class ChatBubble(QWidget):
     def __init__(self, speaker_name, text, avatar_path, color):
@@ -49,25 +67,6 @@ class ChatBubble(QWidget):
         else:
             layout.addWidget(bubble)
             layout.addWidget(avatar_label)
-
-    def split_message_into_chunks(text, max_len=200):
-        """Split long text into smaller chunks at sentence boundaries."""
-        # First, split into sentences
-        sentences = re.split(r'(?<=[.!?])\s+', text)
-        chunks, current = [], ""
-
-        for sentence in sentences:
-            if len(current) + len(sentence) + 1 <= max_len:
-                current += (" " if current else "") + sentence
-            else:
-                if current:
-                    chunks.append(current.strip())
-                current = sentence
-
-        if current:
-            chunks.append(current.strip())
-
-        return chunks
 
 class ChatWindow(QWidget):
     def __init__(self, config, logs):
