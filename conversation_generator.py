@@ -103,7 +103,10 @@ def generate_conversation(config: dict, chat_id: int):
     }
 
     # Save to file
-    filename = os.path.join(LOGS_DIR, f"chat_{chat_id:03d}.json")
+    existing = [f for f in os.listdir(LOGS_DIR) if f.startswith("chat_") and f.endswith(".json")]
+    next_id = len(existing) + 1
+    filename = os.path.join(LOGS_DIR, f"chat_{next_id:03d}.json")
+
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(log_data, f, indent=2, ensure_ascii=False)
 
