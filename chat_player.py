@@ -5,6 +5,7 @@ import json
 import time
 import glob
 import itertools
+import random
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import (
@@ -105,7 +106,8 @@ class ChatWindow(QWidget):
         self.start_next_conversation()
 
     def _show_chunks_with_delay(self, speaker, participant, chunks, idx, first_in_turn=True):
-        """Show typing indicator + balloon for each chunk with natural delays."""
+        """Show typing indicator + balloon for each chunk with natural delays.
+        When all chunks are done, advance to next speaker after a random pause."""
         if idx < len(chunks):
             # Show typing indicator
             indicator = TypingIndicator(speaker)
@@ -113,15 +115,15 @@ class ChatWindow(QWidget):
 
             # Decide typing delay
             if first_in_turn:
-                typing_delay = 3000  # 3 seconds for first message
+                typing_delay = 3000  # 3 seconds for first chunk
             else:
                 length = len(chunks[idx])
                 if length < 80:
-                    typing_delay = 5000   # short message ~5s
+                    typing_delay = 5000
                 elif length < 200:
-                    typing_delay = 8000   # medium ~8s
+                    typing_delay = 8000
                 else:
-                    typing_delay = 12000  # long ~12s
+                    typing_delay = 12000
 
             def show_balloon():
                 # Remove typing indicator
@@ -137,7 +139,7 @@ class ChatWindow(QWidget):
                 )
                 self.chat_area.addWidget(bubble)
 
-                # Schedule next chunk (if any)
+                # Schedule next chunk
                 QTimer.singleShot(
                     typing_delay,
                     lambda: self._show_chunks_with_delay(speaker, participant, chunks, idx + 1, first_in_turn=False)
@@ -145,6 +147,14 @@ class ChatWindow(QWidget):
 
             # Show balloon after typing delay
             QTimer.singleShot(typing_delay, show_balloon)
+
+        else:
+            # ✅ All chunks finished → move to next speaker after random pause
+            self.message_index += 1
+            pause = random.randint(2000, 5000)  # 2–5 seconds
+            QTimer.singleShot(pause, self.show_next_message)
+
+
 
 
     def keyPressEvent(self, event):
